@@ -1,7 +1,5 @@
 package com.py7hon.threshold.scheme;
 
-import java.math.BigInteger;
-
 /**
  * 定义了门限方案的一些方法
  *
@@ -14,19 +12,20 @@ public interface ThresholdScheme {
      * 计算分片
      *
      * @param secretKey               密钥
-     * @param totalSliceNumber        总分片数（n）
+     * @param totalPieceNumber        总分片数（n）
      * @param minEffectiveSliceNumber 最小有效分片数（k），取 k 个以上的分片才能还原出密钥
+     * @param mod                     模，所有的运算将在此模下进行。素数，大于 <code>totalPieceNumber</code> 和 <code>secretKey</code>
      * @return 分片后的数据
      */
-    BigInteger[] genSlices(BigInteger secretKey, int totalSliceNumber, int minEffectiveSliceNumber);
+    long[] genPieces(long secretKey, int totalPieceNumber, int minEffectiveSliceNumber, long mod);
 
     /**
      * 根据部分分片，尝试还原出密钥
      *
-     * @param slices                  部分分片
-     * @param totalSliceNumber
-     * @param minEffectiveSliceNumber
+     * @param pieces                  部分分片
+     * @param totalPieceNumber        总分片数（n）
+     * @param minEffectiveSliceNumber 最小有效分片数（k），取 k 个以上的分片才能还原出密钥
      * @return 还原出的密钥，如果分片不充分，则不能还原出正确的密钥
      */
-    BigInteger restoreSecretKey(BigInteger[] slices, int totalSliceNumber, int minEffectiveSliceNumber);
+    long restoreSecretKey(long[] pieces, int totalPieceNumber, int minEffectiveSliceNumber);
 }
