@@ -112,6 +112,7 @@ public class Shamir implements ThresholdScheme {
 
     @Override
     public long restoreSecretKey(Piece[] pieces, int totalPieceNumber, int minEffectiveSliceNumber, long mod) {
+        // 使用欧几里得插值多项式求解 x = 0 时多项式的值
         long x = 0;
         // 这里使用 double 是为了防止 long 数值溢出
         double result = 0;
