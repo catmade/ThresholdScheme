@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="zh-cmn">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>门限方案</title>
+    <link rel="stylesheet" href="https://unpkg.zhimg.com/element-ui/lib/theme-chalk/index.css">
+</head>
+
+<body>
+<el-form label-width="110px" id="app" v-loading="loading">
+    <el-row :gutter="10">
+        <el-col :xs="{span:24,offset:0}" :sm="{span:14,offset:0}" :md="{span:12,offset:2}" :lg="{span:9,offset:4}"
+                :xl="{span:8,offset:5}">
+            <el-card class="box-card" style="margin-bottom: 15px;">
+                <el-tabs>
+                    <el-tab-pane label="生成分片">
+                        <el-form-item label="门限方案">
+                            <el-select v-model="schemeType" placeholder="请选择门限方案" class="input-element">
+                                <el-option label="Shamir 门限方案" value="shamir"></el-option>
+                                <el-option label="中国剩余定理门限方案" value="chinese-remainder"></el-option>
+                            </el-select>
+                        </el-form-item>
+                        <el-form-item label="密钥" prop="validateSecretKey">
+                            <el-input v-model="secretKey" class="input-element" maxlength="20" show-word-limit
+                                      placeholder="0 ~ 18446744073709551616(2⁶⁴ - 1)"></el-input>
+                        </el-form-item>
+                        <el-form-item label="总分片数">
+                            <el-input v-model="totalPieceNumber" class="input-element" maxlength="10"
+                                      show-word-limit placeholder="0 ~ 4294967295（2³² - 1)"></el-input>
+                        </el-form-item>
+                        <el-form-item label="模">
+                            <el-input v-model="mod" class="input-element" maxlength="20" show-word-limit
+                                      placeholder="0 ~ 18446744073709551616（2⁶⁴ - 1）">
+                            </el-input>
+                            <el-tooltip class="item" effect="dark" :tabIndex="null"
+                                        content="任取一个比密钥和总分片数大的素数，用作模运算的模"
+                                        placement="top-start">k
+                                <i class="el-icon-info"></i>
+                            </el-tooltip>
+                        </el-form-item>
+                        <el-form-item label="最少有效分片数">
+                            <el-input v-model="minEffectivePieceNumber" class="input-element" maxlength="10"
+                                      show-word-limit placeholder="0 ~ 4294967295（2³² - 1)"></el-input>
+                            <el-tooltip class="item" effect="dark" :tabIndex="null"
+                                        content="最少有效分片数应当小于总分片数"
+                                        placement="top-start">
+                                <i class="el-icon-info"></i>
+                            </el-tooltip>
+                        </el-form-item>
+                        <el-form-item style="color: red">
+                            *程序不对输入的数据进行校验，请自行校验
+                        </el-form-item>
+                        <el-form-item>
+                            <el-button type="primary" @click="generatePiece">生成密钥分片
+                            </el-button>
+                        </el-form-item>
+                    </el-tab-pane>
+                    <el-tab-pane label="恢复密钥">
+                        <el-form-item label="门限方案">
+                            <el-select v-model="schemeType" placeholder="请选择门限方案">
+                                <el-option label="Shamir 门限方案" value="shamir"></el-option>
+                                <el-option label="中国剩余定理门限方案" value="chinese-remainder"></el-option>
+                            </el-select>
+                        </el-form-item>
+                        <el-form-item label="模">
+                            <el-input v-model="mod" maxlength="20" class="input-element" show-word-limit
+                                      placeholder="0 ~ 18446744073709551616（2⁶⁴ - 1）">
+                            </el-input>
+                        </el-form-item>
+
+                        <el-form-item label="分片">
+                            <el-tag v-for="tag in selectedSecretKeyPieces" closable @close="handleClose(tag)">
+                                {{tag.index + '-' + tag.value}}
+                            </el-tag>
+                            <br v-if="selectedSecretKeyPieces != null && selectedSecretKeyPieces.length !== 0"/>
+                            <el-tooltip class="item" effect="dark" :tabIndex="null"
+                                        content="获取上一步生成出的分片"
+                                        placement="top-start">
+                                <a href="#" class="button-get-tag" size="small" @click="copyTag">获取分片</a>
+                            </el-tooltip>
+                            <label v-if="selectedSecretKeyPieces != null">共
+                                {{selectedSecretKeyPieces.length}}
+                                片</label>
+                        </el-form-item>
+                        <el-form-item>
+                            <el-button type="primary" @click="restoreSecretKey">恢复密钥
+                            </el-button>
+                        </el-form-item>
+                    </el-tab-pane>
+                </el-tabs>
+            </el-card>
+        </el-col>
+        <el-col :xs="{span:24,offset:0}" :sm="{span:10,offset:0}" :md="{span:8,offset:0}" :lg="{span:7,offset:0}"
+                :xl="{span:6,offset:0}">
+            <el-card class="box-card">
+                <h3>信息展示</h3>
+                <el-alert v-if="secretKey != null" :title="'原始的密钥：' + secretKey" :closable="false" type="success"
+                          effect="dark" style="margin-top: 15px;">
+                </el-alert>
+                <el-alert v-if="restoredSecretKey != null" :title="'恢复的密钥：' + restoredSecretKey"
+                          effect="dark" :closable="false" type="success" style="margin-top: 15px;">
+                </el-alert>
+                <el-alert v-if="mod != null" :title="'模：' + mod" :closable="false" type="success"
+                          effect="dark" style="margin-top: 15px;">
+                </el-alert>
+                <el-alert v-if="minEffectivePieceNumber != null" :title="'最小有效分片数：' + minEffectivePieceNumber"
+                          effect="dark" :closable="false" type="success" style="margin-top: 15px;">
+                </el-alert>
+                <div v-if="secretKeyPieces != null">
+                    <el-alert :title="'分片如下（共' + secretKeyPieces.length + '片）'" :closable="false" type="success"
+                              effect="dark" style="margin-top: 15px;">
+                    </el-alert>
+                    <el-tag v-for="tag in secretKeyPieces">
+                        {{tag.index + '-' + tag.value}}
+                    </el-tag>
+                </div>
+            </el-card>
+        </el-col>
+    </el-row>
+</el-form>
+</body>
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://unpkg.zhimg.com/element-ui/lib/index.js"></script>
+<script src="https://unpkg.zhimg.com/axios/dist/axios.min.js"></script>
+<script>
+    // TODO 打包时注释
+    //axios.defaults.baseURL = "http://localhost:8089";
+
+    const vue = new Vue({
+        el: '#app',
+        data: {
+            loading: false,
+            schemeType: "shamir",  // 方案类别
+            secretKey: 11,
+            restoredSecretKey: null,
+            secretKeyPieces: null,
+            selectedSecretKeyPieces: null,
+            totalPieceNumber: 5,
+            minEffectivePieceNumber: 3,
+            mod: 19
+        },
+        methods: {
+            handleClose(tag) {
+                this.selectedSecretKeyPieces.splice(this.selectedSecretKeyPieces.indexOf(tag), 1);
+            },
+
+            copyTag() {
+                this.selectedSecretKeyPieces = null;
+                this.selectedSecretKeyPieces = JSON.parse(JSON.stringify(this.secretKeyPieces));
+            },
+
+            generatePiece() {
+                this.loading = true;
+                axios.get(`/api/generate-piece/${this.schemeType}`, {
+                    params: {
+                        mod: vue.mod,
+                        secretKey: vue.secretKey,
+                        totalPieceNumber: vue.totalPieceNumber,
+                        minEffectivePieceNumber: vue.minEffectivePieceNumber
+                    }
+                }).then(function (res) {
+                    vue.loading = false;
+                    vue.secretKeyPieces = res.data;
+                    vue.$message({
+                        duration: 1500,
+                        message: '请求成功',
+                        type: 'success'
+                    });
+                }).catch(function (error) {
+                    vue.loading = false;
+                    vue.$message.error(error.message);
+                });
+            },
+
+            restoreSecretKey() {
+                this.loading = true;
+                axios.post(`/api/restore-secret-key/${vue.schemeType}?mod=${vue.mod}`,
+                    vue.selectedSecretKeyPieces
+                ).then(function (res) {
+                    vue.loading = false;
+                    vue.restoredSecretKey = res.data;
+                    vue.$message({
+                        duration: 1500,
+                        message: '请求成功',
+                        type: 'success'
+                    });
+                }).catch(function (error) {
+                    vue.loading = false;
+                    vue.$message.error(error.message);
+                });
+            },
+        }
+    })
+</script>
+<style>
+    .input-item {
+        margin-top: 10px;
+    }
+
+    .input-element {
+        width: 230px;
+    }
+
+    .input-item-label {
+        width: 130px;
+        display: inline-block;
+    }
+
+    .el-alert {
+        cursor: default;
+    }
+
+    .el-tag {
+        margin-right: 10px;
+        margin-top: 8px;
+        cursor: default;
+    }
+
+    a {
+        text-decoration: none;
+        color: rgb(64, 158, 255);
+        height: 32px;
+        line-height: 30px;
+        padding-top: 0;
+        padding-bottom: 0;
+    }
+
+    a:hover {
+        text-decoration: underline;
+    }
+
+    i {
+        margin-left: 10px;
+        color: gray;
+    }
+
+    i:hover {
+        color: rgb(64, 158, 255);
+    }
+
+    .el-alert:hover {
+        background: rgb(63, 170, 9);
+    }
+
+    .el-tag:hover {
+        box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+    }
+</style>
+</html>

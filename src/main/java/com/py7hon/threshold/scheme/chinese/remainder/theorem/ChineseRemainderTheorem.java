@@ -1,6 +1,7 @@
 package com.py7hon.threshold.scheme.chinese.remainder.theorem;
 
 
+import com.py7hon.entity.Piece;
 import com.py7hon.threshold.scheme.ThresholdScheme;
 
 /**
@@ -13,12 +14,12 @@ import com.py7hon.threshold.scheme.ThresholdScheme;
 public class ChineseRemainderTheorem implements ThresholdScheme {
 
     @Override
-    public Piece[] genPieces(long secretKey, int totalPieceNumber, int minEffectiveSliceNumber, long mod) {
+    public Piece[] genPieces(long secretKey, int totalPieceNumber, int minEffectivePieceNumber, long mod) {
         return new Piece[0];
     }
 
     @Override
-    public long restoreSecretKey(Piece[] pieces, int totalPieceNumber, int minEffectiveSliceNumber, long mod) {
+    public long restoreSecretKey(Piece[] pieces, int totalPieceNumber, int minEffectivePieceNumber, long mod) {
         return 0;
     }
 }

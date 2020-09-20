@@ -1,5 +1,6 @@
 package com.py7hon.threshold.scheme.shamir;
 
+import com.py7hon.entity.Piece;
 import com.py7hon.threshold.scheme.ThresholdScheme;
 import org.junit.jupiter.api.Test;
 
@@ -21,10 +22,10 @@ public class Shamir implements ThresholdScheme {
     // region ============= 生成密码片 =============
 
     @Override
-    public Piece[] genPieces(long secretKey, int totalPieceNumber, int minEffectiveSliceNumber, long mod) {
+    public Piece[] genPieces(long secretKey, int totalPieceNumber, int minEffectivePieceNumber, long mod) {
         // 1. 随机生成多项式的系数。多项式的项数为：totalPieceNumber - minEffectiveSliceNumber
         // 系数，下标 0 表示 x^1 的系数，下标 n 表示 x^(n + 1) 的系数
-        long[] coefficients = new long[totalPieceNumber - minEffectiveSliceNumber];
+        long[] coefficients = new long[totalPieceNumber - minEffectivePieceNumber];
         // 生成随机数，取值范围为 [0, mod)
         genRandomNum(coefficients, mod);
 
@@ -111,7 +112,7 @@ public class Shamir implements ThresholdScheme {
     // region ============= 通过密码片解析出密码 =============
 
     @Override
-    public long restoreSecretKey(Piece[] pieces, int totalPieceNumber, int minEffectiveSliceNumber, long mod) {
+    public long restoreSecretKey(Piece[] pieces, int totalPieceNumber, int minEffectivePieceNumber, long mod) {
         // 使用欧几里得插值多项式求解 x = 0 时多项式的值
         long x = 0;
         // 这里使用 double 是为了防止 long 数值溢出

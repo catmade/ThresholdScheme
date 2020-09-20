@@ -35,7 +35,26 @@ public class Piece {
 
 
 
-## 一、Shamir(k, n)门限方案
+## 一、界面效果
+
+-   输入参数
+
+![image-20200920221204227](readme-image/image-20200920221204227.png)
+
+-	生成密钥
+![image-20200920221222770](readme-image/image-20200920221222770.png)
+
+-	选择“恢复密钥“选项卡
+![image-20200920221240858](readme-image/image-20200920221240858.png)
+
+-	点击”获取分片”
+![image-20200920221308615](readme-image/image-20200920221308615.png)
+-	保留任意 3  个分片，可以正常恢复出密钥
+![image-20200920221337291](readme-image/image-20200920221337291.png)
+- 	保留任意两个分片，不能准确恢复密钥
+![image-20200920221355462](readme-image/image-20200920221355462.png)
+
+## 二、Shamir(k, n)门限方案
 
 >   参考：
 >
@@ -176,4 +195,4 @@ public long restoreSecretKey(Piece[] pieces, long mod) {
 }
 ```
 
-## 二、基于中国剩余定理的(k, n)门限方案
+## 三、基于中国剩余定理的(k, n)门限方案
